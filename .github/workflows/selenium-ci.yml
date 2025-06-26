@@ -35,31 +35,17 @@ jobs:
             ${{ runner.os }}-maven
 
       - name: Run Maven tests
-        id: test
         run: mvn clean test -B
-
-      - name: Set output for Slack message
-        id: slack-message
-        run: |
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "message=✅ Build & Tests Passed for $GITHUB_REPOSITORY" >> $GITHUB_OUTPUT
-          else
-            echo "message=❌ Build or Tests Failed for $GITHUB_REPOSITORY" >> $GITHUB_OUTPUT
-          fi
 
   notify:
     needs: build-and-test
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Python dependencies
-        run: pip install requests
-
-      - name: Send Slack Notification via Python
-        run: |
-          python slack_notify.py "${{ needs.build-and-test.result }}"
+      - name: Send Slack Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.NEWSLETTER_CHANNEL }}
