@@ -18,17 +18,17 @@ public class NewsletterTest {
         System.setProperty("webdriver.chrome.driver", "resources/chromedriver.exe");
         driver = new ChromeDriver();
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+//        driver.get("https://shimmering-hamster-bbee86.netlify.app/");
+////        driver.get("file:\\\"C:\\Users\\USER\\Desktop\\CODE\\JAVA\\GTP LABS\\QA\\Newsletter\\index.html\"");
+//        signupPage = new SignupPage(driver);
+    }
+
+    @BeforeEach
+    public void openSignupPage() {
         driver.get("https://shimmering-hamster-bbee86.netlify.app/");
 //        driver.get("file:\\\"C:\\Users\\USER\\Desktop\\CODE\\JAVA\\GTP LABS\\QA\\Newsletter\\index.html\"");
         signupPage = new SignupPage(driver);
     }
-
-//    @BeforeEach
-//    public void openSignupPage() {
-//        driver.get("https://shimmering-hamster-bbee86.netlify.app/");
-////        driver.get("file:\\\"C:\\Users\\USER\\Desktop\\CODE\\JAVA\\GTP LABS\\QA\\Newsletter\\index.html\"");
-//        signupPage = new SignupPage(driver);
-//    }
 
     @Test
     public void testEmptyEmailInput() {
