@@ -31,15 +31,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
+      - name: Install Chrome Browser
+        uses: browser-actions/setup-chrome@latest
+
+      - name: Setup ChromeDriver
+        uses: nanasess/setup-chromedriver@master
+
       - name: Run Maven tests
         run: mvn clean test -B
 
-      - name: Upload test results (optional)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-logs
-          path: target/surefire-reports
+#      - name: Upload test results (optional)
+#        if: always()
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: test-logs
+#          path: target/surefire-reports
 
   notify:
     needs: build-and-test
