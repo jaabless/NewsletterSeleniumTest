@@ -5,6 +5,7 @@ import org.example.pages.SignupPage;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 
 import java.time.Duration;
@@ -13,15 +14,43 @@ public class NewsletterTest {
     private static SignupPage signupPage;
     private ConfirmationPage confirmationPage;
 
-    @BeforeAll
-    public static void setupDriver() {
-        System.setProperty("webdriver.chrome.driver", "resources/chromedriver.exe");
-        driver = new ChromeDriver();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-//        driver.get("https://shimmering-hamster-bbee86.netlify.app/");
-////        driver.get("file:\\\"C:\\Users\\USER\\Desktop\\CODE\\JAVA\\GTP LABS\\QA\\Newsletter\\index.html\"");
-//        signupPage = new SignupPage(driver);
-    }
+//    @BeforeAll
+//    public static void setupDriver() {
+//        System.setProperty("webdriver.chrome.driver", "resources/chromedriver.exe");
+//        driver = new ChromeDriver();
+//        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+////        driver.get("https://shimmering-hamster-bbee86.netlify.app/");
+//////        driver.get("file:\\\"C:\\Users\\USER\\Desktop\\CODE\\JAVA\\GTP LABS\\QA\\Newsletter\\index.html\"");
+////        signupPage = new SignupPage(driver);
+//    }
+
+        @BeforeAll
+        public static void setupDriver() {
+            // Detect OS
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                // Only set this path locally on Windows
+                System.setProperty("webdriver.chrome.driver", "resources/chromedriver.exe");
+            }
+
+            ChromeOptions options = new ChromeOptions();
+
+            // Optional: headless mode if needed in CI or GUI-less testing
+            if (!os.contains("win")) {
+                options.addArguments("--headless");
+                options.addArguments("--no-sandbox");
+                options.addArguments("--disable-dev-shm-usage");
+            }
+
+            driver = new ChromeDriver(options);
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+
+            // Example usage (choose the one you want)
+            // driver.get("https://shimmering-hamster-bbee86.netlify.app/");
+            // driver.get("file:///C:/Users/USER/Desktop/CODE/JAVA/GTP LABS/QA/Newsletter/index.html");
+
+            // signupPage = new SignupPage(driver); // Set this in your actual test
+        }
 
     @BeforeEach
     public void openSignupPage() {
