@@ -1,61 +1,158 @@
-name: Java CI with Maven and Selenium
+# GitHub Actions CI Pipeline for Selenium Tests
+name: Selenium Test Automation
 
+# When to run this workflow
 on:
   push:
-    branches: [main]
+    branches: [ main ]  # Run on push to these branches
   pull_request:
-    branches: [main]
+    branches: [ main ]           # Run on pull requests to main/master
 
+# Define the jobs to run
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+  test:
+    name: Run Selenium Tests
+    runs-on: ubuntu-latest              # Use Ubuntu runner (free)
 
     steps:
-      - name: Checkout code
+      # Step 1: Get the code from repository
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      # Step 2: Set up Java 21
+      - name: ☕ Set up Java 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: 21
+          java-version: '21'
+          distribution: 'temurin'          # Eclipse Temurin JDK
 
-      - name: Set up Chrome
-        uses: browser-actions/setup-chrome@v1
-
-      - name: Cache Maven packages
+      # Step 3: Cache Maven dependencies (speeds up builds)
+      - name: 📦 Cache Maven Dependencies
         uses: actions/cache@v4
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
 
-      - name: Install Chrome Browser
+      # Step 4: Install Chrome browser (needed for Selenium)
+      - name: 🌐 Install Chrome Browser
         uses: browser-actions/setup-chrome@latest
 
-      - name: Setup ChromeDriver
+      # Step 5: Download ChromeDriver automatically
+      - name: 🚗 Setup ChromeDriver
         uses: nanasess/setup-chromedriver@master
 
-      - name: Run Maven tests
-        run: mvn clean test -B
+      # Step 6: Verify Java and Maven versions
+      - name: 🔍 Verify Environment
+        run: |
+          echo "Java version:"
+          java -version
+          echo "Maven version:"
+          mvn -version
+          echo "Chrome version:"
+          google-chrome --version
+          echo "ChromeDriver version:"
+          chromedriver --version
 
-#      - name: Upload test results (optional)
-#        if: always()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: test-logs
-#          path: target/surefire-reports
+      # Step 7: Clean and compile the project
+      - name: 🧹 Clean and Compile
+        run: |
+          echo "🧹 Cleaning project..."
+          mvn clean
+          echo "🔨 Compiling project..."
+          mvn compile test-compile
 
+      # Step 8: Run the Selenium tests
+      - name: 🧪 Run Selenium Tests
+        run: |
+          echo "🚀 Starting Selenium tests..."
+          mvn test -Dheadless=true
+        env:
+          # Set Chrome to run in headless mode (no GUI)
+          CHROME_OPTIONS: --headless --no-sandbox --disable-dev-shm-usage --window-size=1920,1080
+
+      # Step 9: Upload test results (even if tests fail) - UPDATED to v4
+      - name: 📊 Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()  # Upload even if tests fail
+        with:
+          name: test-results-${{ github.run_number }}
+          path: |
+            target/surefire-reports/
+            target/test-classes/
+          retention-days: 30
+
+      # Step 10: Upload screenshots (if any test failures) - UPDATED to v4
+      - name: 📸 Upload Screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()  # Only upload if tests fail
+        with:
+          name: failure-screenshots-${{ github.run_number }}
+          path: screenshots/
+          retention-days: 7
+
+      # Step 11: Generate test summary
+      - name: 📋 Generate Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Runner:** ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f target/surefire-reports/TEST-*.xml ]; then
+            echo "- **Test Results:** Available in artifacts" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Test Results:** No test reports found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Slack notification job (runs after tests complete)
   notify:
-    needs: build-and-test
-    if: always()
+    name: Send Slack Notification
     runs-on: ubuntu-latest
+    needs: test
+    if: always()  # Run even if tests fail
+
     steps:
-      - name: Send Slack Notification
+      # Step 1: Send Slack Notification - FIXED: Proper secret checking
+      - name: 📱 Send Slack Notification
+        if: always()
         uses: 8398a7/action-slack@v3
         with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref
+          status: ${{ needs.test.result }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          text: |
+            🧪 Selenium Tests ${{ needs.test.result == 'success' && '✅ PASSED' || '❌ FAILED' }}
+            
+            📋 Details:
+            • Repository: ${{ github.repository }}
+            • Branch: ${{ github.ref_name }}
+            • Commit: ${{ github.sha }}
+            • Author: ${{ github.actor }}
+            • Workflow: ${{ github.workflow }}
+            
+            🔗 View Results: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # Step 2: Show notification status (for debugging)
+      - name: 📋 Notification Status
+        if: always()
+        run: |
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "📱 Slack notification: Configured ✅"
+            echo "✅ Notifications sent to your #selenium-tests channel!"
+          else
+            echo "📱 Slack notification: Not configured ⚠️"
+            echo ""
+            echo "💡 To enable Slack notifications:"
+            echo "1. Create a Slack channel (e.g., #selenium-tests)"
+            echo "2. Add Incoming Webhooks app to your channel"
+            echo "3. Copy the webhook URL"
+            echo "4. Add it as SLACK_WEBHOOK_URL secret in GitHub"
+            echo ""
+            echo "🔗 Guide: https://api.slack.com/messaging/webhooks"
+          fi
