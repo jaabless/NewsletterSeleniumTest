@@ -29,8 +29,9 @@ public class SignupPage {
         emailInput.sendKeys(email);
     }
 
-    public void clickSubscribe() {
+    public ConfirmationPage clickSubscribe() {
         subscribeButton.click();
+        return new ConfirmationPage(driver);
     }
 
 
