@@ -30,7 +30,8 @@ public class ConfirmationPage {
         return message.getText();
     }
 
-    public void clickDismiss() {
+    public SignupPage clickDismiss() {
         dismissButton.click();
+        return new SignupPage(driver);
     }
 }
