@@ -42,15 +42,6 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Set Notification Message
-        id: slack-message
-        run: |
-          if [ "${{ needs.build-and-test.result }}" = "success" ]; then
-            echo "message=✅ Build & Tests Passed for $GITHUB_REPOSITORY on $GITHUB_REF" >> $GITHUB_OUTPUT
-          else
-            echo "message=❌ Build or Tests Failed for $GITHUB_REPOSITORY on $GITHUB_REF" >> $GITHUB_OUTPUT
-          fi
-
       - name: Send Slack Notification
         uses: 8398a7/action-slack@v3
         with:
