@@ -54,7 +54,8 @@ jobs:
       - name: Send Slack Notification
         uses: 8398a7/action-slack@v3
         with:
-          status: ${{ job.status }}
+          status: custom
+          text: ${{ steps.slack-message.outputs.message }}
           fields: repo,message,commit,author,action,eventName,ref
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.NEWSLETTER_CHANNEL }}
