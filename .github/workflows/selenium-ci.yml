@@ -43,9 +43,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set Notification Message
-        id: slack-message
+      - name: Determine Build Status
+        id: slack_status
         run: |
+          echo "Writing message to output file"
           if [ "${{ needs.build-and-test.result }}" == "success" ]; then
             echo "message=✅ Build & Tests Passed for $GITHUB_REPOSITORY on $GITHUB_REF" >> $GITHUB_OUTPUT
           else
@@ -56,7 +57,7 @@ jobs:
         uses: 8398a7/action-slack@v3
         with:
           status: custom
-          text: ${{ steps.slack-message.outputs.message }}
+          text: ${{ steps.slack_status.outputs.message }}
           fields: repo,message,commit,author,eventName,ref
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.NEWSLETTER_CHANNEL }}
