@@ -45,7 +45,7 @@ jobs:
       - name: Send Slack Notification
         uses: 8398a7/action-slack@v3
         with:
-          status: custom
+          status: ${{ job.status }}
           text: ${{ steps.slack-message.outputs.message }}
           fields: repo,message,commit,author,action,eventName,ref
         env:
