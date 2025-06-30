@@ -18,7 +18,7 @@ public class NewsletterTest extends BaseTests {
     public void testEmptyEmailInput() {
         signupPage.enterEmail("");
         signupPage.clickSubscribe();
-        Assertions.assertEquals("Email required", signupPage.getErrorMessage(),
+        Assertions.assertEquals("Email is required", signupPage.getErrorMessage(),
                 "Error message should be displayed for empty email");
     }
 
